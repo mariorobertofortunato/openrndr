@@ -1,4 +1,4 @@
-rootProject.name = "openrndr-template"
+rootProject.name = "to-the-flowers"
 
 pluginManagement {
     repositories {
