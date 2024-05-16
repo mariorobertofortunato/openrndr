@@ -12,6 +12,7 @@ import org.openrndr.draw.loadFont
 import org.openrndr.draw.renderTarget
 import org.openrndr.draw.shadeStyle
 import org.openrndr.drawImage
+import org.openrndr.extra.color.presets.FLORAL_WHITE
 import org.openrndr.extra.color.presets.LINEN
 import org.openrndr.extra.color.presets.MISTY_ROSE
 import org.openrndr.extra.fx.blur.BoxBlur
@@ -33,7 +34,6 @@ fun main() = application {
     program {
 
         var time = 0.0
-        val font = loadFont("data/fonts/Cinzel_Regular.ttf", 64.0)
         val gradientBackground = drawImage(width, height) {
             drawer.shadeStyle = RadialGradient(ColorRGBa.LINEN, ColorRGBa.BLACK)
             val r = Rectangle.fromCenter(
@@ -88,12 +88,36 @@ fun main() = application {
             // "STARS" BACKGROUND
             drawer.points {
                 repeat(20000) {
-                    fill = rgb(gray = (it * 0.1 - seconds) % 1, a = 0.15)
+                    fill = rgb(gray = (it * 0.1 - seconds) % 1, a = 0.2)
                     point((it * it * 0.011) % width, (it * 4.011) % height)
                 }
             }
 
-            // SEGMENTS & Bits
+            // CENTER PIECE SEGMENTS
+            for (i in -20..20) {
+                val segment = Segment(
+                    start = Vector2(
+                        x = width / 2.0,
+                        y = height / 2.0,
+                    ),
+                    c0 = Vector2(
+                        x = cos(seconds/5 + i) * width / 2.0 + (width / 2),
+                        y = sin(seconds/5 + i) * height / 3.0 + (height / 3),
+                    ),
+                    c1 = Vector2(
+                        x = cos(seconds/5 + i) * -width / 2.0 + (width / 2),
+                        y = sin(seconds/5 + i) * -height / 3.0 + (height / 3),
+                    ),
+                    end = Vector2(
+                        x = width / 2.0,
+                        y = height / 2.0,
+                    )
+                )
+                drawer.stroke = ColorRGBa.LINEN.shade(Random.double(0.4, 0.8))
+                drawer.segment(segment)
+            }
+
+            // FUNNEL SEGMENTS
             for (i in -20..20) {
                 val segment = Segment(
                     start = Vector2(
@@ -106,15 +130,16 @@ fun main() = application {
                     ),
                     end = Vector2(
                         x = (width / 2.0) + i,
-                        y = height.toDouble(),
+                        y = height.toDouble() + 200.0,
                     )
                 )
                 drawer.stroke = ColorRGBa.LINEN.shade(Random.double(0.4, 0.8))
                 drawer.segment(segment)
             }
 
+            // FUNNEL & CENTER PIECE PARTICLES
             for (i in -100..100) {
-                val segment = Segment(
+                val funnelParticles = Segment(
                     start = Vector2(
                         x = cos(seconds + i) * width / 2.0 + (width / 2) + (i / 10),
                         y = sin(seconds + i) * height / 2.0 + (height / 3),
@@ -125,18 +150,37 @@ fun main() = application {
                     ),
                     end = Vector2(
                         x = (width / 2.0) + (i / 10),
-                        y = height.toDouble(),
+                        y = height.toDouble() + 200.0,
+                    )
+                )
+                val centerPieceParticles = Segment(
+                    start = Vector2(
+                        x = width / 2.0,
+                        y = height / 2.0,
+                    ),
+                    c0 = Vector2(
+                        x = cos(seconds/5 + i) * width / 2.0 + (width / 2),
+                        y = sin(seconds/5 + i) * height / 3.0 + (height / 3),
+                    ),
+                    c1 = Vector2(
+                        x = cos(seconds/5 + i) * -width / 2.0 + (width / 2),
+                        y = sin(seconds/5 + i) * -height / 3.0 + (height / 3),
+                    ),
+                    end = Vector2(
+                        x = width / 2.0,
+                        y = height / 2.0,
                     )
                 )
                 style.parameter("time", time)
-                style.parameter("length", segment.length * 2)
+                style.parameter("length", centerPieceParticles.length * 2)
                 style.parameter("offset", Random.perlin(i * 0.303, i * 0.808))
                 drawer.shadeStyle = style
-                drawer.segment(segment)
+                drawer.segments(listOf(centerPieceParticles, funnelParticles))
             }
 
+
             // TEXT
-            drawer.fill = ColorRGBa.MISTY_ROSE
+            drawer.fill = ColorRGBa.FLORAL_WHITE
 
             val textFreeFall = Text(
                 drawer,
@@ -145,7 +189,7 @@ fun main() = application {
                 99.0
             )
             textFreeFall.draw(
-                Vector2(0.0 + 20.0, height - textFreeFall.height),
+                Vector2(0.0 + 25.0, height - textFreeFall.height + sin(seconds/10) * 5),
                 HorizontalAlign.LEFT,
                 VerticalAlign.BASELINE
             )
@@ -157,7 +201,7 @@ fun main() = application {
                 99.0
             )
             textDoomedTo.draw(
-                Vector2(0.0 + 20.0, (height - textDoomedTo.height - textFreeFall.height)),
+                Vector2(0.0 + 20.0, (height - textDoomedTo.height - textFreeFall.height - sin(seconds/10) * 5)),
                 HorizontalAlign.LEFT,
                 VerticalAlign.BASELINE
             )
@@ -169,7 +213,7 @@ fun main() = application {
                 99.0
             )
             textBottomlessPit.draw(
-                Vector2(width.toDouble() - 20.0, height - textBottomlessPit.height),
+                Vector2(width.toDouble() - 20.0, height - textBottomlessPit.height - sin(seconds/10) * 5),
                 HorizontalAlign.RIGHT,
                 VerticalAlign.BASELINE
             )
@@ -181,10 +225,34 @@ fun main() = application {
                 99.0
             )
             textInThis.draw(
-                Vector2(width.toDouble() - 20.0, (height - textInThis.height - textBottomlessPit.height)),
+                Vector2(width.toDouble() - 25.0, (height - textInThis.height - textBottomlessPit.height + sin(seconds/10) * 5)),
                 HorizontalAlign.RIGHT,
                 VerticalAlign.BASELINE
             )
+
+
+/*            val si = compound {
+                intersection {
+
+                }
+            }
+            drawer.fill = ColorRGBa.BLACK
+            drawer.shapes(si)*/
+
+            // TODO vedere se si riesce a fare un funzione helper per trasformare le stringhe in shape IN MODO DA POTER FARE LE INTERSEZIONI TRA DI LORO
+/*            val face = loadFace("data/fonts/default.otf")
+            val charArray = charArrayOf('F','R','E','E')
+
+            val shapeList = mutableListOf<Shape>()
+            charArray.forEach { char ->
+                shapeList.add(face.glyphForCharacter(char).shape(75.0))
+            }
+            shapeList.forEachIndexed { i, shape ->
+                drawer.translate(Vector2(0.0 + (i * shape.bounds.width), 0.0))
+                drawer.shape(shape)
+            }*/
+
+
 
 
             time += 0.005
